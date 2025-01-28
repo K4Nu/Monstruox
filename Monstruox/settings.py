@@ -162,3 +162,65 @@ AUTHENTICATION_BACKENDS = [
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']  # Include the static directory
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_SIGNUP_REDIRECT_URL = '/'
+ACCOUNT_LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = "/accounts/login/"
+LOGOUT_URL = "/accounts/login"
+LOGIN_REDIRECT_URL = "/"  # Redirect after login
+LOGOUT_REDIRECT_URL = "/"  # Redirect after logout
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+ALLOWED_IMAGE_FILETYPES = tuple(ext.lower().strip().strip("'").strip('"') for ext in os.environ.get("ALLOWED_IMAGE_FILETYPES").split(','))
+MAX_IMAGE_SIZE=eval(os.environ.get("MAX_IMAGE_SIZE"))
+SOCIALACCOUNT_LOGIN_ON_GET=True
+ACCOUNT_LOGOUT_ON_GET=True
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'prompt': 'select_account',  # Enables account selection
+        }
+    }
+}
+SOCIALACCOUNT_PROVIDERS = {
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SDK_URL': '//connect.facebook.net/{locale}/sdk.js',
+        'SCOPE': ['email', 'public_profile'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'INIT_PARAMS': {'cookie': True},
+        'FIELDS': [
+            'id',
+            'email',
+            'name',
+            'first_name',
+            'last_name',
+            'gender',
+        ],
+        'EXCHANGE_TOKEN': True,
+        'VERIFIED_EMAIL': False,
+        'VERSION': 'v7.0',
+    },
+'facebook': {
+        'METHOD': 'oauth2',
+        'SDK_URL': '//connect.facebook.net/{locale}/sdk.js',
+        'SCOPE': ['email', 'public_profile'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'INIT_PARAMS': {'cookie': True},
+        'FIELDS': [
+            'id',
+            'email',
+            'name',
+        ],
+        'EXCHANGE_TOKEN': True,
+        'VERIFIED_EMAIL': False,
+        'VERSION': 'v7.0',
+    }
+}

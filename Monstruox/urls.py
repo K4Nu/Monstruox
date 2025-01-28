@@ -16,8 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from users import views as user_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("accounts/resend-email-verification", user_views.ResendVerificationEmail.as_view(),
+         name="resend_email_verification"),
+
     path("accounts/", include("allauth.urls")),
 ]

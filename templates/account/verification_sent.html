@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}
+<title>Email Verification Sent</title>
+{% endblock %}
+
+{% block content %}
+<!-- Full-Height Page Container with Padding -->
+<div class="flex flex-col bg-gray-100" style="min-height: calc(100vh - 4rem);">
+  <!-- Main Content -->
+  <div class="flex-grow flex items-start justify-center px-4 py-24">
+    <!-- Card Container -->
+    <div class="bg-white shadow-lg rounded-lg p-6 max-w-md w-full">
+      <!-- Title -->
+      <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">
+        Verify Your Email
+      </h1>
+
+      <!-- Message -->
+      <p class="text-gray-600 text-center mb-6">
+        We’ve sent a verification email to
+        <span class="font-medium">{{ email }}</span>.
+        Please check your inbox and click the verification link to activate your account.
+      </p>
+
+      <!-- Resend Email Section -->
+      <p class="text-sm text-gray-500 text-center mb-6">
+        Didn’t receive the email? Check your spam folder, or
+        <a href="{% url 'resend_email_verification' %}"
+           class="text-blue-500 hover:underline">
+          resend verification email
+        </a>.
+      </p>
+
+      <!-- Return to Homepage Button -->
+      <div class="flex justify-center">
+        <a href="/"
+           class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 rounded-lg text-center transition duration-200">
+          Return to Homepage
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
