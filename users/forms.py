@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user, password_validation, get_user_model
 from django.core.exceptions import ValidationError
 from allauth.account.utils import get_adapter, send_email_confirmation
-import os
+from .models import Profile
 
 
 class ResendEmailForm(forms.Form):
@@ -60,32 +60,3 @@ class CustomSignUpForm(SignupForm):
         user = super().save(request)
         return user
 
-class CustomEmailChangeForm(forms.Form):
-    email1 = forms.EmailField(label='New Email')
-    email2 = forms.EmailField(label='Confirm New Email')
-
-    def clean(self):
-        User=get_user_model()
-        cleaned_data = super().clean()
-        email1 = cleaned_data.get("email1")
-        email2 = cleaned_data.get("email2")
-
-        if email1 and email2:
-            # Clean emails using adapter
-            email1 = get_adapter().clean_email(email1)
-            email2 = get_adapter().clean_email(email2)
-
-            # Check if emails match
-            if email1 != email2:
-                raise forms.ValidationError("Emails do not match")
-
-            # Comprehensive email uniqueness check
-            if (User.objects.filter(email=email1).exists() or
-                    EmailAddress.objects.filter(email=email1).exists() or
-                    SocialAccount.objects.filter(user__email=email1).exists()):
-                raise forms.ValidationError("Email already in use")
-
-            cleaned_data['email1'] = email1
-            cleaned_data['email2'] = email2
-
-        return cleaned_data

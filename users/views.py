@@ -13,7 +13,7 @@ import os
 from django.contrib import messages
 from .forms import ResendEmailForm,CustomEmailChangeForm
 from allauth.account.views import PasswordChangeView, EmailView, PasswordResetFromKeyDoneView, ConfirmEmailView, \
-    SignupView,PasswordResetView,LoginView
+    SignupView,PasswordResetView,LoginView,PasswordResetDoneView
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -98,3 +98,19 @@ class CustomEmailView(FormView):
                 logout(self.request)
 
         return super().form_valid(form)
+
+class PasswordResetDoneView(PasswordResetDoneView):
+    def get(self,request,*args,**kwargs):
+        storage = get_messages(self.request)
+        for message in storage:
+            pass
+        messages.success(self.request, "Password reset link sent successfully.")
+        return redirect("login")
+
+class PasswordResetFromKeyDoneView(PasswordResetFromKeyDoneView):
+    def get(self,request,*args,**kwargs):
+        storage = get_messages(self.request)
+        for message in storage:
+            pass
+        messages.success(self.request, "Password has been changed successfully.")
+        return redirect("login")
