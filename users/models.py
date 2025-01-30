@@ -132,3 +132,11 @@ class Profile(models.Model):
             'current_streak': self.current_streak,
             'rank': self.get_rank()
         }
+
+class Friendship(models.Model):
+    from_user = models.ForeignKey(User,on_delete=models.CASCADE,related_name="friends")
+    to_user=models.ForeignKey(User,on_delete=models.CASCADE,related_name="receiver")
+    created_at = models.DateTimeField(auto_now_add=True)
+    accepted = models.BooleanField(default=False)
+
+        

@@ -17,9 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from users import views as user_views
+from allauth.account.views import LoginView
 
 urlpatterns = [
+    path("",user_views.IndexView.as_view(), name="index"),
     path('admin/', admin.site.urls),
+    path("login/",LoginView.as_view(),name="login"),
+    path('accounts/email/', user_views.CustomEmailView.as_view(), name='account_email'),
+    path("accounts/confirm-email/<str:key>/", user_views.ConfirmEmailView.as_view(), name="account_confirm_email"),
     path("accounts/resend-email-verification", user_views.ResendVerificationEmail.as_view(),
          name="resend_email_verification"),
 
