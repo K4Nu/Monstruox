@@ -157,17 +157,21 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+ACCOUNT_FORMS = {'signup': 'users.forms.CustomSignUpForm'}
 
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']  # Include the static directory
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+ACCOUNT_AUTHENTICATION_METHOD ="username_email"
 ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_SIGNUP_REDIRECT_URL = '/'
 ACCOUNT_LOGIN_REDIRECT_URL = '/'
-LOGIN_URL = "/accounts/login/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
+LOGIN_URL = "/login/"
 LOGOUT_URL = "/accounts/login"
 LOGIN_REDIRECT_URL = "/"  # Redirect after login
 LOGOUT_REDIRECT_URL = "/"  # Redirect after logout
