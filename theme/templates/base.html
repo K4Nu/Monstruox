@@ -147,7 +147,15 @@ Settings</a>
       </div>
     </div>
   </nav>
-
+    {% if messages %}
+<div class="max-w-md mx-auto mt-4" id="messages-container">
+    {% for message in messages %}
+    <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% elif message.tags == 'info' %}bg-blue-100 border-blue-400 text-blue-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% endif %} border px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ message }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
   {% block content %}
   {% endblock %}
   <script>
@@ -173,6 +181,18 @@ Settings</a>
     mobileMenuButton.addEventListener('click', () => {
       mobileMenu.classList.toggle('hidden');
     });
+
+    //Messages
+   document.addEventListener("DOMContentLoaded", function() {
+    let messageContainer = document.getElementById("messages-container");
+    if (messageContainer) {
+        setTimeout(function () {
+            messageContainer.classList.add("fade-out"); // Start fade-out effect
+            setTimeout(() => messageContainer.remove(), 500); // Remove after fade-out
+        }, 3000); // Wait 3 seconds before starting fade-out
+    }
+});
+
   </script>
 </body>
 </html>

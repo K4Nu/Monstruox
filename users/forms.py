@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user, password_validation, get_user_model
 from django.core.exceptions import ValidationError
 from allauth.account.utils import get_adapter, send_email_confirmation
-import os
+from .models import Profile
 
 
 class ResendEmailForm(forms.Form):
@@ -60,12 +60,13 @@ class CustomSignUpForm(SignupForm):
         user = super().save(request)
         return user
 
+
 class CustomEmailChangeForm(forms.Form):
     email1 = forms.EmailField(label='New Email')
     email2 = forms.EmailField(label='Confirm New Email')
 
     def clean(self):
-        User=get_user_model()
+        User = get_user_model()
         cleaned_data = super().clean()
         email1 = cleaned_data.get("email1")
         email2 = cleaned_data.get("email2")
@@ -89,3 +90,26 @@ class CustomEmailChangeForm(forms.Form):
             cleaned_data['email2'] = email2
 
         return cleaned_data
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ('nickname', 'bio', 'avatar')
+
+    avatar = forms.ImageField(required=False)
+
+    def clean_nickname(self):
+        nickname = self.cleaned_data.get('nickname')
+        if not nickname:
+            raise forms.ValidationError("Nickname is required")
+
+        # If this is an existing profile being updated, exclude it from the unique check
+        existing_profile = Profile.objects.filter(nickname=nickname)
+        if self.instance.pk:
+            existing_profile = existing_profile.exclude(pk=self.instance.pk)
+
+        if existing_profile.exists():
+            raise forms.ValidationError("This nickname is already registered")
+
+        return nickname

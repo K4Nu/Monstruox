@@ -11,9 +11,9 @@ from django.views.generic import DetailView, UpdateView, View, TemplateView, For
 from django import forms
 import os
 from django.contrib import messages
-from .forms import ResendEmailForm,CustomEmailChangeForm
+from .forms import ResendEmailForm, CustomEmailChangeForm, ProfileForm
 from allauth.account.views import PasswordChangeView, EmailView, PasswordResetFromKeyDoneView, ConfirmEmailView, \
-    SignupView,PasswordResetView,LoginView
+    SignupView,PasswordResetView,LoginView,PasswordResetDoneView
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -24,6 +24,7 @@ from django.db import transaction
 from django.forms import modelform_factory
 from django.core.validators import validate_email
 from django.db.models import Q
+from .models import Profile
 
 class ResendVerificationEmail(FormView):
     template_name = "users/resend_email_verification.html"
@@ -44,6 +45,17 @@ class ResendVerificationEmail(FormView):
 
 class IndexView(TemplateView):
     template_name = "users/index.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = ProfileForm()
+        try:
+            Profile.objects.get(user=self.request.user)
+            context["has_profile"]=True
+        except Profile.DoesNotExist:
+            context["has_profile"]=False
+        return context
+
 
 class ConfirmEmailView(ConfirmEmailView,):
     def get(self, request, *args, **kwargs):
@@ -98,3 +110,71 @@ class CustomEmailView(FormView):
                 logout(self.request)
 
         return super().form_valid(form)
+
+class PasswordResetDoneView(PasswordResetDoneView):
+    def get(self,request,*args,**kwargs):
+        storage = get_messages(self.request)
+        for message in storage:
+            pass
+        messages.success(self.request, "Password reset link sent successfully.")
+        return redirect("login")
+
+class PasswordResetFromKeyDoneView(PasswordResetFromKeyDoneView):
+    def get(self,request,*args,**kwargs):
+        storage = get_messages(self.request)
+        for message in storage:
+            pass
+        messages.success(self.request, "Password has been changed successfully.")
+        return redirect("login")
+
+class CreateProfile(CreateView):
+    template_name = "users/create_profile.html"
+    model = Profile
+    form_class = ProfileForm
+
+    def form_valid(self, form):
+        profile = form.save(commit=False)
+        profile.user = self.request.user
+        profile.save()
+
+        if self.request.headers.get('HX-Request'):
+            # Return a response that will trigger a page refresh
+            return HttpResponse(
+                '<script>window.location.href = "/";</script>',
+                headers={
+                    'HX-Trigger': 'profileCreated'
+                }
+            )
+        return redirect("index")
+
+    def form_invalid(self, form):
+        if self.request.headers.get('HX-Request'):
+            # Return just the form with errors for HTMX to update
+            context = {'form': form}
+            return render(
+                self.request,
+                'users/partials/profile_form.html',  # Create this template
+                context,
+                status=400
+            )
+        return super().form_invalid(form)
+
+class ProfileDashboard(DetailView):
+    model = Profile
+    template_name = "users/dashboard.html"
+    context_object_name = "profile"
+
+
+class ProfileDelete(DeleteView):
+    model = Profile
+    success_url = reverse_lazy("index")
+
+    # Do not specify template_name if you're not using a confirmation page.
+
+    def get(self, request, *args, **kwargs):
+        # WARNING: This deletes the object on GET request.
+        return self.delete(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "Profile has been deleted successfully.")
+        return super().delete(request, *args, **kwargs)
