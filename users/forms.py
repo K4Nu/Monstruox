@@ -1,3 +1,5 @@
+import uuid
+
 from allauth.account.forms import SignupForm, ResetPasswordForm, ChangePasswordForm, AddEmailForm
 from allauth.account.models import EmailAddress
 from allauth.socialaccount.models import SocialAccount
@@ -7,7 +9,8 @@ from django.contrib.auth import get_user, password_validation, get_user_model
 from django.core.exceptions import ValidationError
 from allauth.account.utils import get_adapter, send_email_confirmation
 from .models import Profile
-
+import os
+from PIL import Image
 
 class ResendEmailForm(forms.Form):
     email = forms.EmailField(
@@ -113,3 +116,35 @@ class ProfileForm(forms.ModelForm):
             raise forms.ValidationError("This nickname is already registered")
 
         return nickname
+
+    def clean_avatar(self):
+        img = self.cleaned_data.get('avatar')
+        if not img:
+            return img  # Return if no new image
+
+        # Check file extension
+        extension = os.path.splitext(img.name)[1].lower()
+        if extension not in settings.ALLOWED_IMAGE_FILETYPES:
+            raise forms.ValidationError("Invalid image extension")
+
+        return img
+
+    def save(self,commit=True):
+        profile=super().save(commit=False)
+
+        if self.cleaned_data.get('avatar'):
+            img=self.cleaned_data.get('avatar')
+            extension = os.path.splitext(img.name)[1].lower()
+            filename=f'{uuid.uuid4()}.{extension.lower()}'
+
+            image=Image.open(img)
+            img.thumbnail((200,200))
+
+            save_path=os.path.join(settings.MEDIA_ROOT, 'avatars',filename)
+            image.save(save_path)
+            profile.avatar=os.path.join('avatars',filename)
+
+        if commit:
+            profile.save()
+
+        return profile

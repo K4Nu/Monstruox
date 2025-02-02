@@ -20,6 +20,7 @@ from users import views as user_views
 from allauth.account.views import LoginView, SignupView,LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
+from users.views import ConfirmEmailView
 urlpatterns = [
     path("",user_views.IndexView.as_view(), name="index"),
     path("user/",include("users.urls"),name="user"),
@@ -31,6 +32,7 @@ urlpatterns = [
     path("accounts/password/reset/key/done/",user_views.PasswordResetFromKeyDoneView.as_view(),name="password_reset_from_key_done"),
     path('accounts/email/', user_views.CustomEmailView.as_view(), name='account_email'),
     path("accounts/confirm-email/<str:key>/", user_views.ConfirmEmailView.as_view(), name="account_confirm_email"),
+    path("accounts/confirm-email/", ConfirmEmailView.as_view(), name="confirm_email"),
     path("accounts/resend-email-verification", user_views.ResendVerificationEmail.as_view(),
          name="resend_email_verification"),
 
