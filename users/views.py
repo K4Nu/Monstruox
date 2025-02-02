@@ -13,7 +13,7 @@ import os
 from django.contrib import messages
 from .forms import ResendEmailForm, CustomEmailChangeForm, ProfileForm
 from allauth.account.views import PasswordChangeView, EmailView, PasswordResetFromKeyDoneView, ConfirmEmailView, \
-    SignupView,PasswordResetView,LoginView,PasswordResetDoneView
+    SignupView,PasswordResetView,LoginView,PasswordResetDoneView,ConfirmEmailView
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -47,14 +47,15 @@ class IndexView(TemplateView):
     template_name = "users/index.html"
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["form"] = ProfileForm()
-        try:
-            Profile.objects.get(user=self.request.user)
-            context["has_profile"]=True
-        except Profile.DoesNotExist:
-            context["has_profile"]=False
-        return context
+        if self.request.user.is_authenticated:
+            context = super().get_context_data(**kwargs)
+            context["form"] = ProfileForm()
+            try:
+                Profile.objects.get(user=self.request.user)
+                context["has_profile"]=True
+            except Profile.DoesNotExist:
+                context["has_profile"]=False
+            return context
 
 
 class ConfirmEmailView(ConfirmEmailView,):
@@ -86,6 +87,8 @@ class CustomEmailView(FormView):
     def dispatch(self, request, *args, **kwargs):
         if SocialAccount.objects.filter(user=self.request.user).exists():
             messages.error(request, "You cannot change your email using a social account.")
+            return redirect("index")
+        if request.user.is_authenticated and not Profile.objects.filter(user=self.request.user).exists():
             return redirect("index")
         return super().dispatch(request, *args, **kwargs)
 
@@ -150,31 +153,52 @@ class CreateProfile(CreateView):
     def form_invalid(self, form):
         if self.request.headers.get('HX-Request'):
             # Return just the form with errors for HTMX to update
-            context = {'form': form}
-            return render(
-                self.request,
-                'users/partials/profile_form.html',  # Create this template
-                context,
-                status=400
-            )
+            messages.error(self.request,"Invalid form submission.")
+            return redirect('index')
         return super().form_invalid(form)
 
-class ProfileDashboard(DetailView):
+class DeleteUser(View):
+    success_url="login"
+
+    def post(self, request, *args, **kwargs):
+        user=request.user
+
+        EmailAddress.objects.filter(user=user).delete()
+        SocialAccount.objects.filter(user=user).delete()
+        Profile.objects.filter(user=user).delete()
+
+        logout(self.request)
+        user.delete()
+
+        return redirect(self.success_url)
+
+class ConfirmEmailView(ConfirmEmailView,):
+    def get(self, request, *args, **kwargs):
+        try:
+            # Get and confirm the email confirmation object
+            self.object = self.get_object()
+            self.object.confirm(self.request)
+
+            # Clear any existing messages
+            storage = get_messages(self.request)
+            for message in storage:
+                pass  # Clear existing messages
+
+            # Add success message
+            messages.success(request, "Email has been confirmed successfully.")
+
+            return redirect("login")
+
+        except Exception as e:
+            messages.error(request, "Invalid or expired confirmation link.")
+            return redirect("login")
+
+class ProfileDetailView(DetailView):
     model = Profile
-    template_name = "users/dashboard.html"
+    template_name = "users/profile.html"
     context_object_name = "profile"
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not Profile.objects.filter(user=self.request.user).exists():
+            return redirect("index")
 
-class ProfileDelete(DeleteView):
-    model = Profile
-    success_url = reverse_lazy("index")
-
-    # Do not specify template_name if you're not using a confirmation page.
-
-    def get(self, request, *args, **kwargs):
-        # WARNING: This deletes the object on GET request.
-        return self.delete(request, *args, **kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, "Profile has been deleted successfully.")
-        return super().delete(request, *args, **kwargs)

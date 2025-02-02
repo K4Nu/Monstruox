@@ -7,3 +7,4 @@ __pycache__/
 theme/static/
 staticfiles/
 /media
+node_modules/
